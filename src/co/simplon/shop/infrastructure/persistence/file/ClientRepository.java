@@ -25,6 +25,12 @@ public class ClientRepository implements IClientRepository {
 	public ClientRepository() throws IOException {
 		storageDir = new ConfigFileReader().getConfigProperty("storageDirectory");
 		file = new File(storageDir + "/clients.dat");
+
+		try {
+			loadFromFile();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void saveToFile() throws FileNotFoundException, IOException {
@@ -35,17 +41,16 @@ public class ClientRepository implements IClientRepository {
 
 	@SuppressWarnings("unchecked")
 	private void loadFromFile() throws ClassNotFoundException, IOException {
-
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
 		clients = (Map<String, Client>) ois.readObject();
 		ois.close();
-
 	}
 
 	@Override
 	public void saveClient(Client client) {
-		clients.put(client.getId(), client);
-		try {
+		try {	
+			loadFromFile();
+			clients.put(client.getId(), client);
 			saveToFile();
 			loadFromFile();
 		} catch (IOException | ClassNotFoundException e) {
@@ -56,15 +61,15 @@ public class ClientRepository implements IClientRepository {
 	@Override
 	public void deleteClient(Client client) {
 		// dans les hashmap on supprime par clé
-		clients.remove(client.getId());
-		try {
+		try {	
+			loadFromFile();
+			clients.remove(client.getId());
 			saveToFile();
 			loadFromFile();
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
-
 
 	public List<Client> getAllClients() {
 		try {
@@ -82,7 +87,7 @@ public class ClientRepository implements IClientRepository {
 			loadFromFile();
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
-		}		
+		}
 		return clients.get(id);
 	}
 }
